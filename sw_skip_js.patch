@@ -1,0 +1,17 @@
+diff --git a/content/child/service_worker/service_worker_network_provider.cc b/content/child/service_worker/service_worker_network_provider.cc
+index 65ff2b654083..6f9fb3957799 100644
+--- a/content/child/service_worker/service_worker_network_provider.cc
++++ b/content/child/service_worker/service_worker_network_provider.cc
+@@ -65,6 +65,12 @@ class WebServiceWorkerNetworkProviderForFrame
+     extra_data->set_service_worker_provider_id(provider_->provider_id());
+     request.SetExtraData(extra_data);
+ 
++    // Terrible way to detect that something is a script resource, but its fine for limited testing
++    if (!!getenv("SKIP_SW") && base::EndsWith(request.Url().GetString().Latin1(), ".js", base::CompareCase::SENSITIVE)) {
++      printf("Skip SW: %s\n", request.Url().GetString().Ascii().data());
++      request.SetServiceWorkerMode(blink::WebURLRequest::ServiceWorkerMode::kNone);
++    }
++
+     // If the provider does not have a controller at this point, the renderer
+     // expects the request to never be handled by a controlling service worker,
+     // so set the ServiceWorkerMode to skip local workers here. Otherwise, a

@@ -1,0 +1,60 @@
+== Description ==
+
+This contains a simple NodeJS server (server.js) that mimics a real
+production dynamic document response. It's fairly similar to how a
+page on Facebook might be served and loaded.
+
+The server will emit an initial response (early flush) to parse and prepare JS
+modules that will be used by the page. This is generated after a short
+configurable delay, initially 100ms, to simulate the network RTT and
+other factors that introduce latency from the server side.
+
+The server will then wait for another configurable delay, initially
+500ms, to simulate the time required to prepare the page such as
+database queries.
+
+This page requires 40 JS resource to fetched, either from the network
+or one of the many browser caches (HTTP, ServiceWorker, Memory).
+
+== ServiceWorker ==
+
+This contains an optional installable ServiceWorker with a fetch
+listener. This ServiceWorker will serve the initial response (earlier flush)
+as early as possible. This will let the page serve an initial
+'application shell' that can let the page load immediatly before the
+server is ready.
+
+== sw_skip_js.patch ==
+
+This repo also contains a patch to skip the ServiceWorker when fetching
+JavaScript resource. In this example the ServiceWorker doesn't handle
+these resources so going through the ServiceWorker is just unnecessary
+overhead. This patch is meant to study the performance of using
+ServiceWorker to serve dynamic latency critical resources, such as the
+application shell via the document, while letting the HTTP cache serve
+static resources.
+
+The goal is to understand and compare between (1) the non-ServiceWorker
+baseline, (2) ServiceWorker and (3) "JS Skip" ServiceWorker performance.
+
+Once compiled you will be able to trigger the "JS Skip" feature by setting
+SKIP_SW=1 in your environment.
+
+== Running ==
+
+Make sure to install NodeJS, then run:
+$ ./run.sh
+
+You may now connect to http://localhost:3000/
+
+== Notes ==
+
+- Be aware of how the resource is being served to the page. For instance
+  the memory cache has great performance and works well with local
+  testing but its limited size means it's rarely used in the real world.
+
+- Server values: The conclusions that you will draw will depend on the
+  timing values selected. For instance with a very long network RTT using
+  ServiceWorker will typically perform better. However with a better
+  network latency the results will depend heavily on the ServiceWorker
+  implementation.
